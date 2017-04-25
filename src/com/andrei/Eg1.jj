@@ -1,0 +1,31 @@
+PARSER_BEGIN(SyntaxChecker)
+
+public class SyntaxChecker {
+    public static void main(String[] args) {
+        try {
+            new SyntaxChecker(System.in).S();
+            System.out.println("PASS");
+        } catch (Throwable e) {
+            // Catching Throwable is ugly but JavaCC throws Error objects!
+            System.out.println("FAIL: " + e.getMessage());
+        }
+    }
+}
+
+PARSER_END(SyntaxChecker)
+
+SKIP:  { "\t" | "\n" | "\r"                    }
+TOKEN: { "(" | ")" | "+" | "*" | <NUM: (["0"-"9"])+>
+| <DEF: "DEF">
+| <FUNCTION_NAME: (["A"-"Z"])+>
+| <LBRACE: "{">
+| <RBRACE: "}">
+| <PARAMETER_NAME: (["a"-"z"])+>}
+
+
+void S(): {} { (<DEF>" "<FUNCTION_NAME>" "<PARAMETER_NAME>" "<LBRACE>" "E()" "<RBRACE>" "";")* <EOF>           }
+
+void E(): {} { T() ("+" T())*      }
+void T(): {} { F() ("*" F())*      }
+void fcall(): {} { <FUNCTION_NAME>"(" E() ")" }
+void F(): {} { <NUM> | <PARAMETER_NAME> | fcall() | "(" E() ")" }
