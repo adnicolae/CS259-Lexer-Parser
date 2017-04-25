@@ -9,17 +9,21 @@ public interface SyntaxCheckerConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int NUM = 8;
+  int NUM = 7;
   /** RegularExpression Id. */
-  int DEF = 9;
+  int DEF = 8;
   /** RegularExpression Id. */
-  int FUNCTION_NAME = 10;
+  int FUNCTION_NAME = 9;
+  /** RegularExpression Id. */
+  int PARAMETER_NAME = 10;
   /** RegularExpression Id. */
   int LBRACE = 11;
   /** RegularExpression Id. */
   int RBRACE = 12;
   /** RegularExpression Id. */
-  int PARAMETER_NAME = 13;
+  int SEMICOLON = 13;
+  /** RegularExpression Id. */
+  int EOL = 14;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -28,7 +32,6 @@ public interface SyntaxCheckerConstants {
   String[] tokenImage = {
     "<EOF>",
     "\"\\t\"",
-    "\"\\n\"",
     "\"\\r\"",
     "\"(\"",
     "\")\"",
@@ -37,11 +40,12 @@ public interface SyntaxCheckerConstants {
     "<NUM>",
     "\"DEF\"",
     "<FUNCTION_NAME>",
+    "<PARAMETER_NAME>",
     "\"{\"",
     "\"}\"",
-    "<PARAMETER_NAME>",
-    "\" \"",
     "\";\"",
+    "\"\\n\"",
+    "\" \"",
   };
 
 }

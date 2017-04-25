@@ -2,7 +2,7 @@
 public class SyntaxChecker implements SyntaxCheckerConstants {
     public static void main(String[] args) {
         try {
-            new SyntaxChecker(System.in).S();
+            new SyntaxChecker(System.in).parse();
             System.out.println("PASS");
         } catch (Throwable e) {
             // Catching Throwable is ugly but JavaCC throws Error objects!
@@ -10,7 +10,12 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
         }
     }
 
-  static final public void S() throws ParseException {
+  static final public void parse() throws ParseException {
+    start();
+    jj_consume_token(0);
+  }
+
+  static final public void start() throws ParseException, ParseException {
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -21,36 +26,67 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
         jj_la1[0] = jj_gen;
         break label_1;
       }
-      jj_consume_token(DEF);
-      jj_consume_token(14);
-      jj_consume_token(FUNCTION_NAME);
-      jj_consume_token(14);
-      jj_consume_token(PARAMETER_NAME);
-      jj_consume_token(14);
-      jj_consume_token(LBRACE);
-      jj_consume_token(14);
-      E();
-      jj_consume_token(14);
-      jj_consume_token(RBRACE);
-      jj_consume_token(14);
-      jj_consume_token(15);
+      normal_function();
+      try {
+        jj_consume_token(EOL);
+      } catch (ParseException e) {
+            System.err.println("[LEXING ERROR] Invalid terminator.");
+            System.exit(0);
+      }
     }
-    jj_consume_token(0);
   }
 
+//void normal_function(): {} { (<DEF>" "<FUNCTION_NAME>" "<PARAMETER_NAME>" "<LBRACE>" "E()" "<RBRACE>" "";"<EOL>)* <EOF> }
+// Recognises function declarations
+  static final public void normal_function() throws ParseException, ParseException {
+    try {
+      jj_consume_token(DEF);
+      jj_consume_token(15);
+      jj_consume_token(FUNCTION_NAME);
+      jj_consume_token(15);
+      jj_consume_token(PARAMETER_NAME);
+      jj_consume_token(15);
+      jj_consume_token(LBRACE);
+      jj_consume_token(15);
+      E();
+      jj_consume_token(15);
+      jj_consume_token(RBRACE);
+      jj_consume_token(15);
+      jj_consume_token(SEMICOLON);
+    } catch (ParseException e) {
+        System.err.println("[PARSING ERROR] Incorrect declaration.");
+        System.exit(0);
+    }
+  }
+
+/*
+void main_function() throws ParseException:
+{
+}
+{
+    try {
+        (<DEF>" ""MAIN"" "<LBRACE>" "E()" "<RBRACE>" "<SEMICOLON>)
+    }
+
+    catch (ParseException e) {
+        System.err.println("[PARSING ERROR] Incorrect declaration of MAIN.");
+        System.exit(0);
+    }
+}
+*/
   static final public void E() throws ParseException {
     T();
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 6:
+      case 5:
         ;
         break;
       default:
         jj_la1[1] = jj_gen;
         break label_2;
       }
-      jj_consume_token(6);
+      jj_consume_token(5);
       T();
     }
   }
@@ -60,23 +96,29 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 7:
+      case 6:
         ;
         break;
       default:
         jj_la1[2] = jj_gen;
         break label_3;
       }
-      jj_consume_token(7);
+      jj_consume_token(6);
       F();
     }
   }
 
-  static final public void fcall() throws ParseException {
-    jj_consume_token(FUNCTION_NAME);
-    jj_consume_token(4);
-    E();
-    jj_consume_token(5);
+// Recognises function calls
+  static final public void function_call() throws ParseException, ParseException {
+    try {
+      jj_consume_token(FUNCTION_NAME);
+      jj_consume_token(3);
+      E();
+      jj_consume_token(4);
+    } catch (ParseException e) {
+        System.err.println("[PARSING ERROR] Incorrect function call.");
+        System.exit(0);
+    }
   }
 
   static final public void F() throws ParseException {
@@ -88,12 +130,7 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
       jj_consume_token(PARAMETER_NAME);
       break;
     case FUNCTION_NAME:
-      fcall();
-      break;
-    case 4:
-      jj_consume_token(4);
-      E();
-      jj_consume_token(5);
+      function_call();
       break;
     default:
       jj_la1[3] = jj_gen;
@@ -118,7 +155,7 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x200,0x40,0x80,0x2510,};
+      jj_la1_0 = new int[] {0x100,0x20,0x40,0x680,};
    }
 
   /** Constructor with InputStream. */

@@ -3,7 +3,7 @@ PARSER_BEGIN(SyntaxChecker)
 public class SyntaxChecker {
     public static void main(String[] args) {
         try {
-            new SyntaxChecker(System.in).S();
+            new SyntaxChecker(System.in).parse();
             System.out.println("PASS");
         } catch (Throwable e) {
             // Catching Throwable is ugly but JavaCC throws Error objects!
@@ -14,18 +14,111 @@ public class SyntaxChecker {
 
 PARSER_END(SyntaxChecker)
 
-SKIP:  { "\t" | "\n" | "\r"                    }
-TOKEN: { "(" | ")" | "+" | "*" | <NUM: (["0"-"9"])+>
+SKIP:  { "\t" | "\r" }
+TOKEN:
+{
+  "("
+| ")"
+| "+"
+| "*"
+| <NUM: (["0"-"9"])+>
 | <DEF: "DEF">
 | <FUNCTION_NAME: (["A"-"Z"])+>
+| <PARAMETER_NAME: (["a"-"z"])+>
 | <LBRACE: "{">
 | <RBRACE: "}">
-| <PARAMETER_NAME: (["a"-"z"])+>}
+| <SEMICOLON: ";">
+| <EOL: "\n">
+}
 
+void parse():
+{
+}
+{
+    // File ends with EOF
+    start() <EOF>
+}
 
-void S(): {} { (<DEF>" "<FUNCTION_NAME>" "<PARAMETER_NAME>" "<LBRACE>" "E()" "<RBRACE>" "";")* <EOF>           }
+void start() throws ParseException:
+{
+}
+{
+    (
+        // Declaring either a MAIN function or a normal (non-MAIN) function
+        normal_function()
 
+        // Each line must end with EOL
+        try {
+            <EOL>
+        }
+
+        // If a line didn't end with EOL, alert the user and quit
+        catch (ParseException e) {
+            System.err.println("[LEXING ERROR] Invalid terminator.");
+            System.exit(0);
+        }
+    )* // Any number of normal functions is permitted
+}
+
+//void normal_function(): {} { (<DEF>" "<FUNCTION_NAME>" "<PARAMETER_NAME>" "<LBRACE>" "E()" "<RBRACE>" "";"<EOL>)* <EOF> }
+// Recognises function declarations
+void normal_function() throws ParseException:
+{
+}
+{
+    try {
+        (
+        <DEF>
+        " "
+        <FUNCTION_NAME>
+        " "
+        <PARAMETER_NAME>
+        " "
+        <LBRACE>
+        " "
+        E()
+        " "
+        <RBRACE>
+        " "
+        <SEMICOLON>
+        )
+    }
+
+    catch (ParseException e) {
+        System.err.println("[PARSING ERROR] Incorrect declaration.");
+        System.exit(0);
+    }
+}
+/*
+void main_function() throws ParseException:
+{
+}
+{
+    try {
+        (<DEF>" ""MAIN"" "<LBRACE>" "E()" "<RBRACE>" "<SEMICOLON>)
+    }
+
+    catch (ParseException e) {
+        System.err.println("[PARSING ERROR] Incorrect declaration of MAIN.");
+        System.exit(0);
+    }
+}
+*/
 void E(): {} { T() ("+" T())*      }
 void T(): {} { F() ("*" F())*      }
-void fcall(): {} { <FUNCTION_NAME>"(" E() ")" }
-void F(): {} { <NUM> | <PARAMETER_NAME> | fcall() | "(" E() ")" }
+// Recognises function calls
+void function_call() throws ParseException:
+{
+}
+{
+    // Function calls within the function body should be of the type function_name(function_parameters)
+    try {
+        <FUNCTION_NAME>"(" E() ")"
+    }
+
+    catch (ParseException e) {
+        System.err.println("[PARSING ERROR] Incorrect function call.");
+        System.exit(0);
+    }
+}
+void F(): {} { <NUM> | <PARAMETER_NAME> | function_call() }
