@@ -1,13 +1,13 @@
 PARSER_BEGIN(SyntaxChecker)
 
 public class SyntaxChecker {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseException {
         try {
             new SyntaxChecker(System.in).parse();
             System.out.println("PASS");
         } catch (Throwable e) {
             // Catching Throwable is ugly but JavaCC throws Error objects!
-            System.out.println("FAIL: " + e.getMessage());
+            System.out.println("FAIL");
         }
     }
 }
@@ -55,6 +55,7 @@ void start() throws ParseException:
         // If a line didn't end with EOL, alert the user and quit
         catch (ParseException e) {
             System.err.println("[LEXING ERROR] Invalid terminator.");
+            throw e;
             System.exit(0);
         }
     )* // Any number of normal functions is permitted
@@ -86,6 +87,7 @@ void normal_function() throws ParseException:
 
     catch (ParseException e) {
         System.err.println("[PARSING ERROR] Incorrect declaration.");
+        throw e;
         System.exit(0);
     }
 }
@@ -118,6 +120,7 @@ void function_call() throws ParseException:
 
     catch (ParseException e) {
         System.err.println("[PARSING ERROR] Incorrect function call.");
+        throw e;
         System.exit(0);
     }
 }
