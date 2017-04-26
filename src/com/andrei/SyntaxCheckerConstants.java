@@ -23,9 +23,13 @@ public interface SyntaxCheckerConstants {
   /** RegularExpression Id. */
   int RBRACE = 13;
   /** RegularExpression Id. */
-  int SEMICOLON = 14;
+  int SPACE = 14;
   /** RegularExpression Id. */
-  int EOL = 15;
+  int SEMICOLON = 15;
+  /** RegularExpression Id. */
+  int EOL = 16;
+  /** RegularExpression Id. */
+  int DEFINE = 17;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -46,9 +50,10 @@ public interface SyntaxCheckerConstants {
     "<PARAMETER_NAME>",
     "\"{\"",
     "\"}\"",
+    "\" \"",
     "\";\"",
     "\"\\n\"",
-    "\" \"",
+    "<DEFINE>",
   };
 
 }

@@ -6,7 +6,7 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
             System.out.println("PASS");
         } catch (Throwable e) {
             // Catching Throwable is ugly but JavaCC throws Error objects!
-            System.out.println("FAIL");
+            System.out.println("FAIL" + e.getMessage());
         }
     }
 
@@ -19,14 +19,32 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case DEF:
+      case DEFINE:
         ;
         break;
       default:
         jj_la1[0] = jj_gen;
         break label_1;
       }
-      normal_function();
+      jj_consume_token(DEFINE);
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case FUNCTION_NAME:
+        jj_consume_token(FUNCTION_NAME);
+        jj_consume_token(SPACE);
+        normal_function();
+        break;
+      case DEFINE:
+        jj_consume_token(DEFINE);
+        normal_function();
+        break;
+      case MAIN:
+        main_function();
+        break;
+      default:
+        jj_la1[1] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
       try {
         jj_consume_token(EOL);
       } catch (ParseException e) {
@@ -41,24 +59,32 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
 // Recognises function declarations
   static final public void normal_function() throws ParseException, ParseException {
     try {
-      jj_consume_token(DEF);
-      jj_consume_token(16);
-      jj_consume_token(FUNCTION_NAME);
-      jj_consume_token(16);
       jj_consume_token(PARAMETER_NAME);
-      jj_consume_token(16);
+      jj_consume_token(SPACE);
       jj_consume_token(LBRACE);
-      jj_consume_token(16);
+      jj_consume_token(SPACE);
       E();
-      jj_consume_token(16);
+      jj_consume_token(SPACE);
       jj_consume_token(RBRACE);
-      jj_consume_token(16);
+      jj_consume_token(SPACE);
       jj_consume_token(SEMICOLON);
     } catch (ParseException e) {
         System.err.println("[PARSING ERROR] Incorrect declaration.");
         {if (true) throw e;}
         System.exit(0);
     }
+  }
+
+  static final public void main_function() throws ParseException {
+    jj_consume_token(MAIN);
+    jj_consume_token(SPACE);
+    jj_consume_token(LBRACE);
+    jj_consume_token(SPACE);
+    E();
+    jj_consume_token(SPACE);
+    jj_consume_token(RBRACE);
+    jj_consume_token(SPACE);
+    jj_consume_token(SEMICOLON);
   }
 
 /*
@@ -85,7 +111,7 @@ void main_function() throws ParseException:
         ;
         break;
       default:
-        jj_la1[1] = jj_gen;
+        jj_la1[2] = jj_gen;
         break label_2;
       }
       jj_consume_token(5);
@@ -102,7 +128,7 @@ void main_function() throws ParseException:
         ;
         break;
       default:
-        jj_la1[2] = jj_gen;
+        jj_la1[3] = jj_gen;
         break label_3;
       }
       jj_consume_token(6);
@@ -137,7 +163,7 @@ void main_function() throws ParseException:
         function_call();
         break;
       default:
-        jj_la1[3] = jj_gen;
+        jj_la1[4] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -158,13 +184,13 @@ void main_function() throws ParseException:
   static public Token jj_nt;
   static private int jj_ntk;
   static private int jj_gen;
-  static final private int[] jj_la1 = new int[4];
+  static final private int[] jj_la1 = new int[5];
   static private int[] jj_la1_0;
   static {
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x100,0x20,0x40,0xc80,};
+      jj_la1_0 = new int[] {0x20000,0x20600,0x20,0x40,0xc80,};
    }
 
   /** Constructor with InputStream. */
@@ -185,7 +211,7 @@ void main_function() throws ParseException:
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 4; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 5; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -199,7 +225,7 @@ void main_function() throws ParseException:
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 4; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 5; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -216,7 +242,7 @@ void main_function() throws ParseException:
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 4; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 5; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -226,7 +252,7 @@ void main_function() throws ParseException:
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 4; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 5; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -242,7 +268,7 @@ void main_function() throws ParseException:
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 4; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 5; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -251,7 +277,7 @@ void main_function() throws ParseException:
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 4; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 5; i++) jj_la1[i] = -1;
   }
 
   static private Token jj_consume_token(int kind) throws ParseException {
@@ -302,12 +328,12 @@ void main_function() throws ParseException:
   /** Generate ParseException. */
   static public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[17];
+    boolean[] la1tokens = new boolean[18];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 5; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -316,7 +342,7 @@ void main_function() throws ParseException:
         }
       }
     }
-    for (int i = 0; i < 17; i++) {
+    for (int i = 0; i < 18; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

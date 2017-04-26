@@ -7,7 +7,7 @@ public class SyntaxChecker {
             System.out.println("PASS");
         } catch (Throwable e) {
             // Catching Throwable is ugly but JavaCC throws Error objects!
-            System.out.println("FAIL");
+            System.out.println("FAIL" + e.getMessage());
         }
     }
 }
@@ -28,8 +28,10 @@ TOKEN:
 | <PARAMETER_NAME: (["a"-"z"])+>
 | <LBRACE: "{">
 | <RBRACE: "}">
+| <SPACE: " ">
 | <SEMICOLON: ";">
 | <EOL: "\n">
+| <DEFINE: <DEF> <SPACE>>
 }
 
 void parse():
@@ -46,7 +48,8 @@ void start() throws ParseException:
 {
     (
         // Declaring either a MAIN function or a normal (non-MAIN) function
-        normal_function()
+        //<DEFINE> (normal_function() | main_function() | <DEFINE> normal_function())
+        <DEFINE> (<FUNCTION_NAME> <SPACE> normal_function() | <DEFINE> normal_function() | main_function())
 
         // Each line must end with EOL
         try {
@@ -60,6 +63,7 @@ void start() throws ParseException:
             System.exit(0);
         }
     )* // Any number of normal functions is permitted
+
 }
 
 //void normal_function(): {} { (<DEF>" "<FUNCTION_NAME>" "<PARAMETER_NAME>" "<LBRACE>" "E()" "<RBRACE>" "";"<EOL>)* <EOF> }
@@ -70,10 +74,8 @@ void normal_function() throws ParseException:
 {
     try {
         (
-        <DEF>
-        " "
-        <FUNCTION_NAME>
-        " "
+        //<FUNCTION_NAME>
+        //" "
         <PARAMETER_NAME>
         " "
         <LBRACE>
@@ -91,6 +93,23 @@ void normal_function() throws ParseException:
         throw e;
         System.exit(0);
     }
+}
+
+void main_function():
+{
+}
+{
+    (
+    <MAIN>
+    <SPACE>
+    <LBRACE>
+    <SPACE>
+    E()
+    <SPACE>
+    <RBRACE>
+    <SPACE>
+    <SEMICOLON>
+    )
 }
 /*
 void main_function() throws ParseException:
