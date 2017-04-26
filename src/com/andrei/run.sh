@@ -1,4 +1,4 @@
 #!/bin/bash
 javacc Eg1.jj
 javac *.java
-java SyntaxChecker < ex3.txt > out.txt 2> err.txt
+java SyntaxChecker < ex2.txt > out2.txt 2> err2.txt

@@ -13,17 +13,19 @@ public interface SyntaxCheckerConstants {
   /** RegularExpression Id. */
   int DEF = 8;
   /** RegularExpression Id. */
-  int FUNCTION_NAME = 9;
+  int MAIN = 9;
   /** RegularExpression Id. */
-  int PARAMETER_NAME = 10;
+  int FUNCTION_NAME = 10;
   /** RegularExpression Id. */
-  int LBRACE = 11;
+  int PARAMETER_NAME = 11;
   /** RegularExpression Id. */
-  int RBRACE = 12;
+  int LBRACE = 12;
   /** RegularExpression Id. */
-  int SEMICOLON = 13;
+  int RBRACE = 13;
   /** RegularExpression Id. */
-  int EOL = 14;
+  int SEMICOLON = 14;
+  /** RegularExpression Id. */
+  int EOL = 15;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -39,6 +41,7 @@ public interface SyntaxCheckerConstants {
     "\"*\"",
     "<NUM>",
     "\"DEF\"",
+    "\"MAIN\"",
     "<FUNCTION_NAME>",
     "<PARAMETER_NAME>",
     "\"{\"",

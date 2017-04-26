@@ -6,8 +6,7 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
             System.out.println("PASS");
         } catch (Throwable e) {
             // Catching Throwable is ugly but JavaCC throws Error objects!
-            System.out.println("FAIL: ");
-            //throw e;
+            System.out.println("FAIL");
         }
     }
 
@@ -31,7 +30,7 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
       try {
         jj_consume_token(EOL);
       } catch (ParseException e) {
-            System.err.println("[LEXING ERROR] Invalid terminator.");
+            System.err.println("[LEXING ERROR] Invalid line terminator.");
             {if (true) throw e;}
             System.exit(0);
       }
@@ -43,17 +42,17 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
   static final public void normal_function() throws ParseException, ParseException {
     try {
       jj_consume_token(DEF);
-      jj_consume_token(15);
+      jj_consume_token(16);
       jj_consume_token(FUNCTION_NAME);
-      jj_consume_token(15);
+      jj_consume_token(16);
       jj_consume_token(PARAMETER_NAME);
-      jj_consume_token(15);
+      jj_consume_token(16);
       jj_consume_token(LBRACE);
-      jj_consume_token(15);
+      jj_consume_token(16);
       E();
-      jj_consume_token(15);
+      jj_consume_token(16);
       jj_consume_token(RBRACE);
-      jj_consume_token(15);
+      jj_consume_token(16);
       jj_consume_token(SEMICOLON);
     } catch (ParseException e) {
         System.err.println("[PARSING ERROR] Incorrect declaration.");
@@ -125,21 +124,27 @@ void main_function() throws ParseException:
     }
   }
 
-  static final public void F() throws ParseException {
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case NUM:
-      jj_consume_token(NUM);
-      break;
-    case PARAMETER_NAME:
-      jj_consume_token(PARAMETER_NAME);
-      break;
-    case FUNCTION_NAME:
-      function_call();
-      break;
-    default:
-      jj_la1[3] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
+  static final public void F() throws ParseException, ParseException {
+    try {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case NUM:
+        jj_consume_token(NUM);
+        break;
+      case PARAMETER_NAME:
+        jj_consume_token(PARAMETER_NAME);
+        break;
+      case FUNCTION_NAME:
+        function_call();
+        break;
+      default:
+        jj_la1[3] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+    } catch (ParseException e) {
+        System.err.println("[PARSING ERROR] Expected a numerical value, a parameter or a function call.");
+        {if (true) throw e;}
+        System.exit(0);
     }
   }
 
@@ -159,7 +164,7 @@ void main_function() throws ParseException:
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x100,0x20,0x40,0x680,};
+      jj_la1_0 = new int[] {0x100,0x20,0x40,0xc80,};
    }
 
   /** Constructor with InputStream. */
@@ -297,7 +302,7 @@ void main_function() throws ParseException:
   /** Generate ParseException. */
   static public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[16];
+    boolean[] la1tokens = new boolean[17];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
@@ -311,7 +316,7 @@ void main_function() throws ParseException:
         }
       }
     }
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 17; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;
