@@ -1,6 +1,9 @@
 PARSER_BEGIN(SyntaxChecker)
+import java.util.*;
 
 public class SyntaxChecker {
+    public static ArrayList<String> functions = new ArrayList<String>();
+    public static ArrayList<String> functionCalls = new ArrayList<String>();
     public static void main(String[] args) throws ParseException {
         try {
             new SyntaxChecker(System.in).parse();
@@ -40,17 +43,51 @@ void parse():
 {
     // File ends with EOF
     start() <EOF>
+    {
+        if (!functions.contains("MAIN")) {
+            throw new ParseException("Every program must define the MAIN function");
+        }
+
+        for (String function : functionCalls) {
+            if (!functions.contains(function)) {
+                throw new ParseException("A call has been made to a non-defined function.");
+            }
+        }
+    }
 }
 
 void start() throws ParseException:
 {
+    String functionName = "";
+    Token t = null;
 }
 {
-    (
+   (
         // Declaring either a MAIN function or a normal (non-MAIN) function
         //<DEFINE> (normal_function() | main_function() | <DEFINE> normal_function())
-        <DEFINE> (<FUNCTION_NAME> <SPACE> normal_function() | <DEFINE> normal_function() | main_function())
+        <DEFINE>
+        (
+            t = <FUNCTION_NAME>
+            { functionName = t.image; }
+            <SPACE> normal_function()
+        |   <DEFINE> normal_function()
+            { functionName = "DEF"; }
+        |   main_function()
+            { functionName = "MAIN"; }
+        )
 
+        // The string functionName now contains the name of the function that was declared
+        {
+            // If the function was previously declared throw a ParseException as only one declaration is allowed
+            if (functions.contains(functionName)) {
+                throw new ParseException("A function can only be defined once");
+                /* throw ParseException; System.err.println(" "); */
+            }
+            // Add the function name to the arraylist of functions
+            else {
+                functions.add(functionName);
+            }
+        }
         // Each line must end with EOL
         try {
             <EOL>
@@ -63,6 +100,7 @@ void start() throws ParseException:
             System.exit(0);
         }
     )* // Any number of normal functions is permitted
+
 
 }
 
@@ -77,19 +115,12 @@ void normal_function() throws ParseException:
         //<FUNCTION_NAME>
         //" "
         <PARAMETER_NAME>
-        " "
-        <LBRACE>
-        " "
-        E()
-        " "
-        <RBRACE>
-        " "
-        <SEMICOLON>
+        function_body()
         )
     }
 
     catch (ParseException e) {
-        System.err.println("[PARSING ERROR] Incorrect declaration.");
+        System.err.println("[PARSING ERROR] Incorrect parameter name.");
         throw e;
         System.exit(0);
     }
@@ -101,41 +132,53 @@ void main_function():
 {
     (
     <MAIN>
-    <SPACE>
-    <LBRACE>
-    <SPACE>
-    E()
-    <SPACE>
-    <RBRACE>
-    <SPACE>
-    <SEMICOLON>
+    function_body()
     )
 }
-/*
-void main_function() throws ParseException:
+void function_body() throws ParseException:
 {
 }
 {
     try {
-        (<DEF>" ""MAIN"" "<LBRACE>" "E()" "<RBRACE>" "<SEMICOLON>)
+        (
+        <SPACE>
+        <LBRACE>
+        <SPACE>
+        E()
+        <SPACE>
+        <RBRACE>
+        <SPACE>
+        <SEMICOLON>
+        )
     }
 
     catch (ParseException e) {
-        System.err.println("[PARSING ERROR] Incorrect declaration of MAIN.");
+        System.err.println("[PARSING ERROR] Incorrect function body formatting.");
+        throw e;
         System.exit(0);
     }
 }
-*/
+
 void E(): {} { T() ("+" T())*      }
 void T(): {} { F() ("*" F())*      }
 // Recognises function calls
 void function_call() throws ParseException:
 {
+    String functionName = "";
+    Token t;
 }
 {
     // Function calls within the function body should be of the type function_name(function_parameters)
     try {
-        <FUNCTION_NAME>"(" E() ")"
+        // either a normal function name or a DEF one
+        (
+        t = <FUNCTION_NAME>
+            { functionName = t.image; }
+        |
+        <DEF>
+            { functionName = "DEF"; }
+        ) "(" E() ")"
+        { functionCalls.add(functionName); }
     }
 
     catch (ParseException e) {
