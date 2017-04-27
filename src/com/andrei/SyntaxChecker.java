@@ -14,8 +14,10 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
         }
     }
 
-  static final public void parse() throws ParseException {
-    start();
+  static final public int parse() throws ParseException {
+    int result;
+    // File ends with EOF
+        result = start();
     jj_consume_token(0);
         if (!functions.contains("MAIN")) {
             {if (true) throw new ParseException("Every program must define the MAIN function");}
@@ -26,6 +28,8 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
                 {if (true) throw new ParseException("A call has been made to a non-defined function.");}
             }
         }
+        {if (true) return result;}
+    throw new Error("Missing return statement in function");
   }
 
   static final public void start() throws ParseException, ParseException {
@@ -396,4 +400,30 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
   static final public void disable_tracing() {
   }
 
+}
+
+abstract class Exp {}
+class Num extends Exp {
+    int value;
+    Num (int v) { this.value = v; }
+    public String toString() { return value + ""; }
+}
+
+class Param extends Exp {
+    String param;
+    Param (String p) { this.param = p; }
+    public String toString() { return param; };
+}
+
+class BinaryExp extends Exp {
+    String op;
+    Exp left, right;
+    BinaryExp(String op, Exp left, Exp right) {
+        this.op = op;
+        this.left = left;
+        this.right = right;
+    }
+    public String toString() {
+        return op + " " + left + " " + right;
+    }
 }

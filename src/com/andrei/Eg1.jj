@@ -15,6 +15,33 @@ public class SyntaxChecker {
     }
 }
 
+abstract class Exp {}
+class Num extends Exp {
+    int value;
+    Num (int v) { this.value = v; }
+    public String toString() { return value + ""; }
+}
+
+class Param extends Exp {
+    String param;
+    Param (String p) { this.param = p; }
+    public String toString() { return param; }
+}
+
+class BinaryExp extends Exp {
+    String op;
+    Exp left, right;
+    BinaryExp(String op, Exp left, Exp right) {
+        this.op = op;
+        this.left = left;
+        this.right = right;
+    }
+    public String toString() {
+        return op + " " + left + " " + right;
+    }
+}
+
+
 PARSER_END(SyntaxChecker)
 
 SKIP:  { "\t" | "\r" }
