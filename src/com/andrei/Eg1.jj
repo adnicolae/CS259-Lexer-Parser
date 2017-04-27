@@ -3,16 +3,57 @@ import java.util.*;
 
 public class SyntaxChecker {
     public static ArrayList<String> functions = new ArrayList<String>();
+    public static HashMap<String, Exp> fMap = new HashMap<String, Exp>();
     public static ArrayList<String> functionCalls = new ArrayList<String>();
+    private static final String operators = "+*";
+    private static final String operands = "0123456789";
     public static void main(String[] args) throws ParseException {
         try {
-            new SyntaxChecker(System.in).parse();
+            Exp res = new SyntaxChecker(System.in).parse();
             System.out.println("PASS");
-        } catch (Throwable e) {
+            System.out.println(evaluatePostfix(res.toString()));
+            System.out.println(res);
+        } catch (ParseException e) {
             // Catching Throwable is ugly but JavaCC throws Error objects!
             System.out.println("FAIL" + e.getMessage());
+            e.printStackTrace();
+        } catch (NullPointerException n) {
+            System.out.println("DIVERGENCE");
         }
     }
+
+    public static int evaluatePostfix(String postfixExpr) {
+                    char[] chars = postfixExpr.toCharArray();
+                    Stack<Integer> stack = new Stack<Integer>();
+                    for (char c : chars) {
+                            if (isOperand(c)) {
+                                    stack.push(c - '0'); // convert char to int val
+                            } else if (isOperator(c)) {
+                                    int op1 = stack.pop();
+                                    int op2 = stack.pop();
+                                    int result;
+                                    switch (c) {
+                                    case '*':
+                                            result = op1 * op2;
+                                            stack.push(result);
+                                            break;
+                                    case '+':
+                                            result = op1 + op2;
+                                            stack.push(result);
+                                            break;
+                                    }
+                            }
+                    }
+                    return stack.pop();
+            }
+
+            private static boolean isOperator(char val) {
+                            return operators.indexOf(val) >= 0;
+            }
+
+            private static boolean isOperand(char val) {
+                            return operands.indexOf(val) >= 0;
+            }
 }
 
 abstract class Exp {}
@@ -28,6 +69,13 @@ class Param extends Exp {
     public String toString() { return param; }
 }
 
+class FunctionCall extends Exp {
+    String functionName;
+    Exp functionArgument;
+    FunctionCall (String name, Exp argument) { this.functionName = name; this.functionArgument = argument; }
+    public String toString() { return functionArgument.toString() + SyntaxChecker.fMap.get(functionName).toString(); }
+}
+
 class BinaryExp extends Exp {
     String op;
     Exp left, right;
@@ -37,8 +85,14 @@ class BinaryExp extends Exp {
         this.right = right;
     }
     public String toString() {
-        return op + " " + left + " " + right;
+        return "(" + left.toString() + " " + right.toString() + op + ")";
     }
+}
+
+class BaldBinary extends Exp {
+    Exp left, right;
+    BaldBinary (Exp l, Exp r) { this.left = l; this.right = r; }
+    public String toString() { return left.toString() + " " + right.toString(); }
 }
 
 
@@ -64,8 +118,9 @@ TOKEN:
 | <DEFINE: <DEF> <SPACE>>
 }
 
-void parse():
+Exp parse():
 {
+    //Exp e;
 }
 {
     // File ends with EOF
@@ -80,6 +135,9 @@ void parse():
                 throw new ParseException("A call has been made to a non-defined function.");
             }
         }
+
+        //return e;
+        return fMap.get("MAIN");
     }
 }
 
@@ -87,6 +145,8 @@ void start() throws ParseException:
 {
     String functionName = "";
     Token t = null;
+    Exp exp = null;
+    Exp fbody = null;
 }
 {
    (
@@ -96,11 +156,11 @@ void start() throws ParseException:
         (
             t = <FUNCTION_NAME>
             { functionName = t.image; }
-            <SPACE> normal_function()
-        |   <DEFINE> normal_function()
+            <SPACE> fbody = normal_function()
+        |   <DEFINE> fbody = normal_function()
             { functionName = "DEF"; }
-        |   main_function()
-            { functionName = "MAIN"; }
+        |   exp = main_function()
+            { functionName = "MAIN"; fbody = exp; }
         )
 
         // The string functionName now contains the name of the function that was declared
@@ -113,6 +173,7 @@ void start() throws ParseException:
             // Add the function name to the arraylist of functions
             else {
                 functions.add(functionName);
+                fMap.put(functionName, fbody);
             }
         }
         // Each line must end with EOL
@@ -127,14 +188,14 @@ void start() throws ParseException:
             System.exit(0);
         }
     )* // Any number of normal functions is permitted
-
-
+    //{return exp;}
 }
 
 //void normal_function(): {} { (<DEF>" "<FUNCTION_NAME>" "<PARAMETER_NAME>" "<LBRACE>" "E()" "<RBRACE>" "";"<EOL>)* <EOF> }
 // Recognises function declarations
-void normal_function() throws ParseException:
+Exp normal_function() throws ParseException:
 {
+    Exp exp;
 }
 {
     try {
@@ -142,8 +203,9 @@ void normal_function() throws ParseException:
         //<FUNCTION_NAME>
         //" "
         <PARAMETER_NAME>
-        function_body()
+        exp = function_body()
         )
+        { return exp; }
     }
 
     catch (ParseException e) {
@@ -153,17 +215,20 @@ void normal_function() throws ParseException:
     }
 }
 
-void main_function():
+Exp main_function():
 {
+    Exp exp;
 }
 {
     (
     <MAIN>
-    function_body()
+    exp = function_body()
     )
+    { return exp; }
 }
-void function_body() throws ParseException:
+Exp function_body() throws ParseException:
 {
+    Exp exp;
 }
 {
     try {
@@ -171,12 +236,13 @@ void function_body() throws ParseException:
         <SPACE>
         <LBRACE>
         <SPACE>
-        E()
+        exp = E()
         <SPACE>
         <RBRACE>
         <SPACE>
         <SEMICOLON>
         )
+        { return exp; }
     }
 
     catch (ParseException e) {
@@ -186,26 +252,36 @@ void function_body() throws ParseException:
     }
 }
 
-void E(): {} { T() ("+" T())*      }
-void T(): {} { F() ("*" F())*      }
+Exp E(): { Exp e1, e2; } { e1 = T() ("+" e2 = T() { e1 = new BinaryExp("+", e1, e2); } )* { return e1; } }
+Exp T(): { Exp e1, e2; } { e1 = F() ("*" e2 = F() { e1 = new BinaryExp("*", e1, e2); } )* { return e1; } }
 // Recognises function calls
-void function_call() throws ParseException:
+Exp function_call() throws ParseException:
 {
     String functionName = "";
     Token t;
+    Exp exp;
 }
 {
     // Function calls within the function body should be of the type function_name(function_parameters)
     try {
         // either a normal function name or a DEF one
         (
-        t = <FUNCTION_NAME>
-            { functionName = t.image; }
+        t = <FUNCTION_NAME> { functionName = t.image; }
         |
-        <DEF>
-            { functionName = "DEF"; }
-        ) "(" E() ")"
-        { functionCalls.add(functionName); }
+        <DEF> { functionName = "DEF"; }
+        ) { functionCalls.add(functionName); } //TODO: is this the correct location???
+        "(" exp = E() ")"
+          {
+          //return new BaldBinary(exp, fMap.get(functionName));
+//           if (fMap.get(functionName) != null) return new BaldBinary(exp, fMap.get(functionName));
+//           else return new BaldBinary (exp,
+            return new FunctionCall(functionName, exp);
+           } // if the function doesn't have param in it, return the num
+         //{ return exp; }
+        //{ return new BinaryExp("+", exp, fMap.get(functionName)); }
+       // functionmap.getfbody(functionName).hasParam()? => replace otherwise get the function body (which is an expr)
+       // if the function body contains the parameter then replace that with the given parameter ergo E() above
+       // though not exactly necessary, !!! I NEED TO GET THE OP
     }
 
     catch (ParseException e) {
@@ -214,12 +290,21 @@ void function_call() throws ParseException:
         System.exit(0);
     }
 }
-void F() throws ParseException:
+Exp F() throws ParseException:
 {
+    Exp exp;
+    Token num;
+    Token param;
 }
 {
     try {
-        (<NUM> | <PARAMETER_NAME> | function_call())
+        (
+        num = <NUM> { return new Num(Integer.parseInt(num.image)); }
+        |
+        param = <PARAMETER_NAME> { return new Param(param.image); }
+        |
+        exp = function_call() { return exp; }
+        )
     }
 
     catch (ParseException e) {

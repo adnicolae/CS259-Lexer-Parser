@@ -3,21 +3,60 @@ import java.util.*;
 
 public class SyntaxChecker implements SyntaxCheckerConstants {
     public static ArrayList<String> functions = new ArrayList<String>();
+    public static HashMap<String, Exp> fMap = new HashMap<String, Exp>();
     public static ArrayList<String> functionCalls = new ArrayList<String>();
+    private static final String operators = "+*";
+    private static final String operands = "0123456789";
     public static void main(String[] args) throws ParseException {
         try {
-            new SyntaxChecker(System.in).parse();
+            Exp res = new SyntaxChecker(System.in).parse();
             System.out.println("PASS");
-        } catch (Throwable e) {
+            System.out.println(evaluatePostfix(res.toString()));
+            System.out.println(res);
+        } catch (ParseException e) {
             // Catching Throwable is ugly but JavaCC throws Error objects!
             System.out.println("FAIL" + e.getMessage());
+            e.printStackTrace();
+        } catch (NullPointerException n) {
+            System.out.println("DIVERGENCE");
         }
     }
 
-  static final public int parse() throws ParseException {
-    int result;
-    // File ends with EOF
-        result = start();
+    public static int evaluatePostfix(String postfixExpr) {
+                    char[] chars = postfixExpr.toCharArray();
+                    Stack<Integer> stack = new Stack<Integer>();
+                    for (char c : chars) {
+                            if (isOperand(c)) {
+                                    stack.push(c - '0'); // convert char to int val
+                            } else if (isOperator(c)) {
+                                    int op1 = stack.pop();
+                                    int op2 = stack.pop();
+                                    int result;
+                                    switch (c) {
+                                    case '*':
+                                            result = op1 * op2;
+                                            stack.push(result);
+                                            break;
+                                    case '+':
+                                            result = op1 + op2;
+                                            stack.push(result);
+                                            break;
+                                    }
+                            }
+                    }
+                    return stack.pop();
+            }
+
+            private static boolean isOperator(char val) {
+                            return operators.indexOf(val) >= 0;
+            }
+
+            private static boolean isOperand(char val) {
+                            return operands.indexOf(val) >= 0;
+            }
+
+  static final public Exp parse() throws ParseException {
+    start();
     jj_consume_token(0);
         if (!functions.contains("MAIN")) {
             {if (true) throw new ParseException("Every program must define the MAIN function");}
@@ -28,13 +67,17 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
                 {if (true) throw new ParseException("A call has been made to a non-defined function.");}
             }
         }
-        {if (true) return result;}
+
+        //return e;
+        {if (true) return fMap.get("MAIN");}
     throw new Error("Missing return statement in function");
   }
 
   static final public void start() throws ParseException, ParseException {
     String functionName = "";
     Token t = null;
+    Exp exp = null;
+    Exp fbody = null;
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -51,16 +94,16 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
         t = jj_consume_token(FUNCTION_NAME);
               functionName = t.image;
         jj_consume_token(SPACE);
-        normal_function();
+        fbody = normal_function();
         break;
       case DEFINE:
         jj_consume_token(DEFINE);
-        normal_function();
+        fbody = normal_function();
               functionName = "DEF";
         break;
       case MAIN:
-        main_function();
-              functionName = "MAIN";
+        exp = main_function();
+              functionName = "MAIN"; fbody = exp;
         break;
       default:
         jj_la1[1] = jj_gen;
@@ -75,6 +118,7 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
             // Add the function name to the arraylist of functions
             else {
                 functions.add(functionName);
+                fMap.put(functionName, fbody);
             }
       try {
         jj_consume_token(EOL);
@@ -88,41 +132,51 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
 
 //void normal_function(): {} { (<DEF>" "<FUNCTION_NAME>" "<PARAMETER_NAME>" "<LBRACE>" "E()" "<RBRACE>" "";"<EOL>)* <EOF> }
 // Recognises function declarations
-  static final public void normal_function() throws ParseException, ParseException {
+  static final public Exp normal_function() throws ParseException, ParseException {
+    Exp exp;
     try {
       jj_consume_token(PARAMETER_NAME);
-      function_body();
+      exp = function_body();
+          {if (true) return exp;}
     } catch (ParseException e) {
         System.err.println("[PARSING ERROR] Incorrect parameter name.");
         {if (true) throw e;}
         System.exit(0);
     }
+    throw new Error("Missing return statement in function");
   }
 
-  static final public void main_function() throws ParseException {
+  static final public Exp main_function() throws ParseException {
+    Exp exp;
     jj_consume_token(MAIN);
-    function_body();
+    exp = function_body();
+      {if (true) return exp;}
+    throw new Error("Missing return statement in function");
   }
 
-  static final public void function_body() throws ParseException, ParseException {
+  static final public Exp function_body() throws ParseException, ParseException {
+    Exp exp;
     try {
       jj_consume_token(SPACE);
       jj_consume_token(LBRACE);
       jj_consume_token(SPACE);
-      E();
+      exp = E();
       jj_consume_token(SPACE);
       jj_consume_token(RBRACE);
       jj_consume_token(SPACE);
       jj_consume_token(SEMICOLON);
+          {if (true) return exp;}
     } catch (ParseException e) {
         System.err.println("[PARSING ERROR] Incorrect function body formatting.");
         {if (true) throw e;}
         System.exit(0);
     }
+    throw new Error("Missing return statement in function");
   }
 
-  static final public void E() throws ParseException {
-    T();
+  static final public Exp E() throws ParseException {
+           Exp e1, e2;
+    e1 = T();
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -134,12 +188,16 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
         break label_2;
       }
       jj_consume_token(5);
-      T();
+      e2 = T();
+                                                    e1 = new BinaryExp("+", e1, e2);
     }
+                                                                                            {if (true) return e1;}
+    throw new Error("Missing return statement in function");
   }
 
-  static final public void T() throws ParseException {
-    F();
+  static final public Exp T() throws ParseException {
+           Exp e1, e2;
+    e1 = F();
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -151,52 +209,67 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
         break label_3;
       }
       jj_consume_token(6);
-      F();
+      e2 = F();
+                                                    e1 = new BinaryExp("*", e1, e2);
     }
+                                                                                            {if (true) return e1;}
+    throw new Error("Missing return statement in function");
   }
 
 // Recognises function calls
-  static final public void function_call() throws ParseException, ParseException {
+  static final public Exp function_call() throws ParseException, ParseException {
     String functionName = "";
     Token t;
+    Exp exp;
     try {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case FUNCTION_NAME:
         t = jj_consume_token(FUNCTION_NAME);
-              functionName = t.image;
+                              functionName = t.image;
         break;
       case DEF:
         jj_consume_token(DEF);
-              functionName = "DEF";
+                functionName = "DEF";
         break;
       default:
         jj_la1[4] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
+            functionCalls.add(functionName);
       jj_consume_token(3);
-      E();
+      exp = E();
       jj_consume_token(4);
-          functionCalls.add(functionName);
+          //return new BaldBinary(exp, fMap.get(functionName));
+//           if (fMap.get(functionName) != null) return new BaldBinary(exp, fMap.get(functionName));
+//           else return new BaldBinary (exp,
+            {if (true) return new FunctionCall(functionName, exp);}
     } catch (ParseException e) {
         System.err.println("[PARSING ERROR] Incorrect function call.");
         {if (true) throw e;}
         System.exit(0);
     }
+    throw new Error("Missing return statement in function");
   }
 
-  static final public void F() throws ParseException, ParseException {
+  static final public Exp F() throws ParseException, ParseException {
+    Exp exp;
+    Token num;
+    Token param;
     try {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case NUM:
-        jj_consume_token(NUM);
+        num = jj_consume_token(NUM);
+                      {if (true) return new Num(Integer.parseInt(num.image));}
         break;
       case PARAMETER_NAME:
-        jj_consume_token(PARAMETER_NAME);
+        param = jj_consume_token(PARAMETER_NAME);
+                                   {if (true) return new Param(param.image);}
         break;
       case DEF:
       case FUNCTION_NAME:
-        function_call();
+        exp = function_call();
+                                {if (true) return exp;}
         break;
       default:
         jj_la1[5] = jj_gen;
@@ -208,6 +281,7 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
         {if (true) throw e;}
         System.exit(0);
     }
+    throw new Error("Missing return statement in function");
   }
 
   static private boolean jj_initialized_once = false;
@@ -412,7 +486,14 @@ class Num extends Exp {
 class Param extends Exp {
     String param;
     Param (String p) { this.param = p; }
-    public String toString() { return param; };
+    public String toString() { return param; }
+}
+
+class FunctionCall extends Exp {
+    String functionName;
+    Exp functionArgument;
+    FunctionCall (String name, Exp argument) { this.functionName = name; this.functionArgument = argument; }
+    public String toString() { return functionArgument.toString() + SyntaxChecker.fMap.get(functionName).toString(); }
 }
 
 class BinaryExp extends Exp {
@@ -424,6 +505,12 @@ class BinaryExp extends Exp {
         this.right = right;
     }
     public String toString() {
-        return op + " " + left + " " + right;
+        return "(" + left.toString() + " " + right.toString() + op + ")";
     }
+}
+
+class BaldBinary extends Exp {
+    Exp left, right;
+    BaldBinary (Exp l, Exp r) { this.left = l; this.right = r; }
+    public String toString() { return left.toString() + " " + right.toString(); }
 }
