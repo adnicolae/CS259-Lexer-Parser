@@ -5,6 +5,14 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
     public static ArrayList<String> functions = new ArrayList<String>();
     public static HashMap<String, Exp> fMap = new HashMap<String, Exp>();
     public static ArrayList<String> functionCalls = new ArrayList<String>();
+    public static ArrayList<String> parametersAll = new ArrayList<String>();
+    public static ArrayList<String> parametersWithinBody = new ArrayList<String>();
+
+
+    public static HashMap<String, Function> functionMap = new HashMap<String, Function>();
+
+
+    // MAKE A HASHMAP FUNCTIONAME - PARAM NAME or smth
     private static final String operators = "+*";
     private static final String operands = "0123456789";
     public static void main(String[] args) throws ParseException {
@@ -15,10 +23,12 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
             System.out.println(res);
         } catch (ParseException e) {
             // Catching Throwable is ugly but JavaCC throws Error objects!
-            System.out.println("FAIL" + e.getMessage());
+            System.out.println("FAIL");
             e.printStackTrace();
-        } catch (NullPointerException n) {
+        } catch (StackOverflowError n) {
+            //
             System.out.println("DIVERGENCE");
+            //n.printStackTrace();
         }
     }
 
@@ -67,15 +77,22 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
                 {if (true) throw new ParseException("A call has been made to a non-defined function.");}
             }
         }
+/*
+        for (String parameter : parametersWithinBody) {
+            if (!parametersAll.contains(parameter)) {
+                throw new ParseException("Please use the associated parameter within body.");
+            }
+        }*/
 
         //return e;
-        {if (true) return fMap.get("MAIN");}
+        {if (true) return functionMap.get("MAIN").getBody();}
     throw new Error("Missing return statement in function");
   }
 
   static final public void start() throws ParseException, ParseException {
     String functionName = "";
     Token t = null;
+    Token param = null;
     Exp exp = null;
     Exp fbody = null;
     label_1:
@@ -94,10 +111,12 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
         t = jj_consume_token(FUNCTION_NAME);
               functionName = t.image;
         jj_consume_token(SPACE);
+        param = jj_consume_token(PARAMETER_NAME);
         fbody = normal_function();
         break;
       case DEFINE:
         jj_consume_token(DEFINE);
+        param = jj_consume_token(PARAMETER_NAME);
         fbody = normal_function();
               functionName = "DEF";
         break;
@@ -119,6 +138,7 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
             else {
                 functions.add(functionName);
                 fMap.put(functionName, fbody);
+                functionMap.put(functionName, new Function(fbody, param.image));
             }
       try {
         jj_consume_token(EOL);
@@ -135,8 +155,10 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
   static final public Exp normal_function() throws ParseException, ParseException {
     Exp exp;
     try {
-      jj_consume_token(PARAMETER_NAME);
-      exp = function_body();
+      //<FUNCTION_NAME>
+              //" "
+              //param = <PARAMETER_NAME>
+              exp = function_body();
           {if (true) return exp;}
     } catch (ParseException e) {
         System.err.println("[PARSING ERROR] Incorrect parameter name.");
@@ -264,7 +286,7 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
         break;
       case PARAMETER_NAME:
         param = jj_consume_token(PARAMETER_NAME);
-                                   {if (true) return new Param(param.image);}
+                                   parametersWithinBody.add(param.image); {if (true) return new Param(param.image);}
         break;
       case DEF:
       case FUNCTION_NAME:
@@ -476,6 +498,15 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
 
 }
 
+class Function {
+    Exp body;
+    String parameter;
+    Function(Exp body, String p) { this.body = body; this.parameter = p; }
+    public Exp getBody() { return body; }
+    public String getParameter() { return parameter; }
+
+}
+
 abstract class Exp {}
 class Num extends Exp {
     int value;
@@ -487,13 +518,22 @@ class Param extends Exp {
     String param;
     Param (String p) { this.param = p; }
     public String toString() { return param; }
+    public String getParam() { return this.param; }
 }
 
 class FunctionCall extends Exp {
     String functionName;
     Exp functionArgument;
     FunctionCall (String name, Exp argument) { this.functionName = name; this.functionArgument = argument; }
-    public String toString() { return functionArgument.toString() + SyntaxChecker.fMap.get(functionName).toString(); }
+    private String replaceParameter() {
+        //Function f = SyntaxChecker.functionMap.get(functionName);
+        String body = SyntaxChecker.functionMap.get(functionName).getBody().toString();
+        String parameter = SyntaxChecker.functionMap.get(functionName).getParameter();
+        String x = "";
+        x = body.replaceAll(parameter, functionArgument.toString());
+        return x;
+    }
+    public String toString() { return replaceParameter(); }
 }
 
 class BinaryExp extends Exp {
