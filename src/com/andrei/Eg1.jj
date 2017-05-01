@@ -113,7 +113,7 @@ class BinaryExp extends Exp {
         this.right = right;
     }
     public String toString() {
-        return "(" + left.toString() + " " + right.toString() + op + ")";
+        return "(" + left.toString() + "|" + right.toString() + op + ")";
     }
 }
 
@@ -180,6 +180,7 @@ void start() throws ParseException:
     String functionName = "";
     Token t = null;
     Token param = null;
+    String p = "";
     Exp exp = null;
     Exp fbody = null;
 }
@@ -191,11 +192,11 @@ void start() throws ParseException:
         (
             t = <FUNCTION_NAME>
             { functionName = t.image; }
-            <SPACE> param = <PARAMETER_NAME> fbody = normal_function()
-        |   <DEFINE> param = <PARAMETER_NAME> fbody = normal_function()
+            <SPACE> param = <PARAMETER_NAME> fbody = normal_function() { p = param.image; }
+        |   <DEFINE> param = <PARAMETER_NAME> fbody = normal_function() { p = param.image; }
             { functionName = "DEF"; }
         |   exp = main_function()
-            { functionName = "MAIN"; fbody = exp; }
+            { functionName = "MAIN"; fbody = exp; p = ""; }
         )
 
         // The string functionName now contains the name of the function that was declared
@@ -209,7 +210,7 @@ void start() throws ParseException:
             else {
                 functions.add(functionName);
                 fMap.put(functionName, fbody);
-                functionMap.put(functionName, new Function(fbody, param.image));
+                functionMap.put(functionName, new Function(fbody, p));
             }
         }
         // Each line must end with EOL

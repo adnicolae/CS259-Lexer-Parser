@@ -93,6 +93,7 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
     String functionName = "";
     Token t = null;
     Token param = null;
+    String p = "";
     Exp exp = null;
     Exp fbody = null;
     label_1:
@@ -113,16 +114,18 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
         jj_consume_token(SPACE);
         param = jj_consume_token(PARAMETER_NAME);
         fbody = normal_function();
+                                                                         p = param.image;
         break;
       case DEFINE:
         jj_consume_token(DEFINE);
         param = jj_consume_token(PARAMETER_NAME);
         fbody = normal_function();
+                                                                          p = param.image;
               functionName = "DEF";
         break;
       case MAIN:
         exp = main_function();
-              functionName = "MAIN"; fbody = exp;
+              functionName = "MAIN"; fbody = exp; p = "";
         break;
       default:
         jj_la1[1] = jj_gen;
@@ -138,7 +141,7 @@ public class SyntaxChecker implements SyntaxCheckerConstants {
             else {
                 functions.add(functionName);
                 fMap.put(functionName, fbody);
-                functionMap.put(functionName, new Function(fbody, param.image));
+                functionMap.put(functionName, new Function(fbody, p));
             }
       try {
         jj_consume_token(EOL);
@@ -545,7 +548,7 @@ class BinaryExp extends Exp {
         this.right = right;
     }
     public String toString() {
-        return "(" + left.toString() + " " + right.toString() + op + ")";
+        return "(" + left.toString() + "|" + right.toString() + op + ")";
     }
 }
 
